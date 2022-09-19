@@ -19,6 +19,6 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "build": "tsc && node dist"
+    "build": "tsc"
   }
 }

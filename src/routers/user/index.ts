@@ -104,8 +104,8 @@ userRouter.post("/", async (req, res) => {
   return res.status(201).send("success");
 });
 
+/** 회원정보 수정 */
 userRouter.patch("/", async (req, res) => {
-  const { createHash } = await crypto;
   const access = req.headers["authorization"];
   if (!access) {
     return res.status(401).send("인증되지 않은 유저입니다.");
@@ -119,13 +119,35 @@ userRouter.patch("/", async (req, res) => {
   }
   database[verify.id] = {
     ...database[verify.id],
-    password: req.body.password
-      ? createHash("sha256").update(req.body.password).digest("hex")
-      : database[verify.id].password,
     name: req.body.name ? req.body.name : database[verify.id].name,
     age: req.body.age ? req.body.age : database[verify.id].age,
     hobby: req.body.hobby ? [...req.body.hobby] : database[verify.id].hobby,
   };
+
+  return res.status(201).send("success");
+});
+
+/** 비밀번호 변경 */
+userRouter.post("/password", async (req, res) => {
+  const { createHash } = await crypto;
+  const access = req.headers["authorization"];
+  if (!access) {
+    return res.status(401).send("인증되지 않은 유저입니다.");
+  }
+  const verify = verifyAccess(access) as any;
+
+  if (verify === null)
+    return res.status(401).send("access 토큰이 만료되었습니다.");
+  const hashedPassword = createHash("sha256")
+    .update(req.body.password)
+    .digest("hex");
+  const hashedNewPassword = createHash("sha256")
+    .update(req.body.newPassword)
+    .digest("hex");
+  if (database[verify.id].password !== hashedPassword)
+    return res.status(200).send("비밀번호가 일치하지 않습니다.");
+
+  database[verify.id].password = hashedNewPassword;
 
   return res.status(201).send("success");
 });
